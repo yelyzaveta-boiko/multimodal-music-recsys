@@ -1,2 +1,7 @@
 venv
 .env
+data
+models
+lda_model_coh
+.spotify_cache.json
+__pycache__
