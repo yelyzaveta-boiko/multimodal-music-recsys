@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Lyrics-based Music Recommender</title>
+    <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+<div class="container">
+    <h1>Rate These Songs</h1>
+    <div id="songs"></div>
+
+    <button id="recommendButton">Get Recommendations</button>
+    <div id="recommendations"></div>
+
+    <div class="button-container">
+        <button id="openFeedbackButton" style="display:none;">Give Feedback</button>
+    </div>
+
+    <!-- feedback modal -->
+    <div id="feedbackModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button" id="closeModal">&times;</span>
+            <h2>We value your feedback</h2>
+            <iframe src="https://docs.google.com/forms/d/e/1FAIpQLSeKyVldizPxuG3uvs4K2INgQfjiUv6L6tQDYBUQUCyWTxtxKA/viewform?embedded=true"
+                    width="640" height="1000" frameborder="0">Loading…</iframe>
+        </div>
+    </div>
+</div>
+<script src="/static/script.js"></script>
+</body>
+</html>
