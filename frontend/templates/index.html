@@ -10,6 +10,11 @@
 <div class="container">
     <h1>Rate These Songs</h1>
     <div id="songs"></div>
+    <select id="engineSelect">
+        <option value="lda_coh"  selected>LDA (coherence K)</option>
+        <option value="lda_fixed">LDA (fixed K)</option>
+        <option value="all">Bert</option>
+      </select>      
 
     <button id="recommendButton">Get Recommendations</button>
     <div id="recommendations"></div>
