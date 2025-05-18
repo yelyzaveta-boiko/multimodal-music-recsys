@@ -15,6 +15,7 @@ ROOT = Path(__file__).parent
 MODEL_DIRS = {
     "lda_coh":   ROOT / "lda_model_coh",
     "lda_fixed": ROOT / "lda_model_fixed",
+    #"bert": ROOT /
 }
 
 topic_mats, models, dicts, dfs = {}, {}, {}, {}
@@ -25,24 +26,21 @@ for name, folder in MODEL_DIRS.items():
     vec_file   = folder / "lda_vectors.npy"
     meta_file  = folder / "lyrics_df.pkl"
 
-    # gensim < 4.4 needs *str* not Path
-    models[name]     = LdaModel.load(str(model_file))
-    dicts[name]      = corpora.Dictionary.load(str(dict_file))
-    topic_mats[name] = np.load(vec_file)            # np.load accepts Path
 
+    models[name] = LdaModel.load(str(model_file))
+    dicts[name] = corpora.Dictionary.load(str(dict_file))
+    topic_mats[name] = np.load(vec_file)
     df = pd.read_pickle(meta_file).reset_index(drop=True)
     df.rename(columns={"track_id": "id",
-                       "song":      "name",
-                       "artist":    "artists"}, inplace=True)
+                       "song": "name",
+                       "artist": "artists"}, inplace=True)
     df["id"] = df["id"].astype(str)
     dfs[name] = df
 
 print("[bootstrap] loaded models:", ", ".join(models.keys()))
 
 
-# ---------- optional helper ---------------------------------------------------
 def vectors_for(ids, model):
-    """Return rows of the topic matrix in the caller-supplied order."""
     mat = topic_mats[model]
     df  = dfs[model]
 
