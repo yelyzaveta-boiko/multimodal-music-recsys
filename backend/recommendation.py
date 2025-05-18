@@ -7,36 +7,16 @@ import pandas as pd
 from sklearn.metrics.pairwise import cosine_similarity
 from gensim.models import LdaModel
 from gensim import corpora
-
+from topic_models import topic_mats, dfs
 from spotify_api import enrich
-
-
-# artefacts 
-ROOT   = Path(__file__).parent
-MODELS = ROOT / "lda_model_coh"
-DATA   = ROOT / "data/spotify_millsongdata_en"
-
-
-lda = LdaModel.load(str(MODELS / "lda_lyrics.model"))
-dictionary = corpora.Dictionary.load(str(MODELS / "lyrics_dictionary.dict"))
-vectors = np.load(str(MODELS / "lda_vectors.npy")) # (N, topics)
-
-df = pd.read_pickle(MODELS / "lyrics_df.pkl").reset_index(drop=True)
-
-df.rename(columns={
-    "track_id": "id", 
-    "song": "name", 
-    "artist": "artists"
-    }, inplace=True)
-df["id"] = df["id"].astype(str) 
-
-META = ["id", "name", "artists"]
 
 _user_ratings = []
 
-def random_songs(n=5):
+def random_songs(n=5, default_model="lda_coh"):
+    df   = dfs[default_model]
+    META = ["id", "name", "artists"]
     sample = df.sample(n)
-    print("[random]  track_ids:", list(sample["id"]))
+    print("[random] track_ids:", list(sample["id"]))
     return enrich(sample[META].to_dict("records"))
 
 
@@ -46,32 +26,36 @@ def save_ratings(ratings):
     print("[save] ratings:", _user_ratings)
 
 
-def _profile_embed():
+def _profile_embed(model_name):
     ids = np.array([int(r["id"]) for r in _user_ratings])
     scores = np.array([float(r["score"]) for r in _user_ratings])
-
-    profile = (scores[:, None] * vectors[ids]).sum(axis=0) / (scores.sum() + 1e-8)
+    vecs = topic_mats[model_name]
+    profile = (scores[:, None] * vecs[ids]).sum(axis=0) / (scores.sum() + 1e-8)
     return profile
 
-def recommendations(k=5):
-    if not _user_ratings:
-        raise RuntimeError("No ratings yet.")
-
-    profile = _profile_embed()
+def _recommend(model_name, k=5):
+    profile = _profile_embed(model_name)
+    vecs = topic_mats[model_name]
+    df = dfs[model_name]
 
     # similarity of profile vs. every song
-    sims = cosine_similarity(profile[None, :], vectors).ravel()
+    sims = cosine_similarity(profile[None, :], vecs).ravel()
+    
 
     # exclude songs already rated
     for r in _user_ratings:
         sims[int(r["id"])] = -1
 
     # top-k indices
-    idx = np.argsort(-sims)[:k]
-
-    print("[recs] idx:", idx)
-    print("[recs] cosine similarities:", sims[idx])
-
-    recs = df.loc[idx, META]
+    idx = sims.argsort()[::-1][:k]
+    recs = df.loc[idx, ["id", "name", "artists"]].copy()
     recs["similarity"] = sims[idx]
+    print(f"[recs:{model_name}] idx:", idx)
+    print(f"[recs:{model_name}] sims:", sims[idx])
     return enrich(recs.to_dict("records"))
+
+def recommendations(k=5, model_name="lda_coh"):
+    """Return k recs from the chosen engine."""
+    if not _user_ratings:
+        raise RuntimeError("No ratings stored")
+    return _recommend(model_name, k)
