@@ -10,7 +10,6 @@ app = Flask(__name__, template_folder="../frontend/templates",
             static_folder="../frontend/static")
 CORS(app)
 
-# ─── routes ───────────────────────────────────────────────────────────────
 @app.route("/")
 def root():
     return render_template("index.html")
@@ -30,8 +29,10 @@ def api_save():
 
 @app.route("/api/recommendations", methods=["POST"])
 def api_recs():
-    return jsonify(recommendations())
-
+    body  = request.get_json(force=True)
+    model = body.get("model", "lda_coh")
+    k = int(body.get("k", 5))
+    return jsonify(recommendations(k=k, model_name=model))
 
 if __name__ == "__main__":
     app.run(debug=True)
