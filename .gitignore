@@ -5,3 +5,5 @@ models
 lda_model_coh
 .spotify_cache.json
 __pycache__
+backend/bert_model
+backend/lda_model_fixed
